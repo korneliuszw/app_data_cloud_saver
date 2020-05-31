@@ -24,7 +24,6 @@ lazy_static! {
     // SECRET DO NOT LEAK
     pub static ref DBX_CLIENT_ID : &'static str= "53skk6a0x62f5hw";
     pub static ref DBX_CLIENT_SECRET: &'static str = "ivx1zzwtf9yxpkf";
-    pub static ref API_KEY: Mutex<String> = Mutex::new(String::new());
 }
 
 mod apps;

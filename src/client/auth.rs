@@ -14,8 +14,6 @@ pub fn create_auth_window(builder: &crate::ui_builder::UIBuilder) {
         let code = code_field.get_text().unwrap();
         match exchange_code_for_token(code.as_str()) {
             Ok(token) => {
-                let mut global_val = crate::API_KEY.lock().unwrap();
-                *global_val = token.clone();
                 save_to_file(token).unwrap();
                 create_restart_dialog();
                 auth_window.close();
@@ -24,7 +22,6 @@ pub fn create_auth_window(builder: &crate::ui_builder::UIBuilder) {
             _ => {}
         }
     });
-    println!("end");
 }
 pub fn get_dropbox_oauth_link() -> String {
     let client_id = &crate::DBX_CLIENT_ID;

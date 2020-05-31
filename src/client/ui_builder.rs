@@ -4,7 +4,8 @@ use gtk::{ApplicationWindow, Builder};
 use std::cell::RefCell;
 
 thread_local! {
-    static GLOBAL: RefCell<(Option<gtk::TreeView>, Option<crate::apps::Apps>)> = RefCell::new((None, None))
+    static GLOBAL: RefCell<(Option<gtk::TreeView>, Option<crate::apps::Apps>)> = RefCell::new((None, None));
+    static TREE_STORE: RefCell<Option<gtk::ListStore>> = RefCell::new(None)
 }
 pub struct UIBuilder<'a> {
     pub app: &'a gtk::Application,
@@ -27,6 +28,7 @@ impl<'a> UIBuilder<'a> {
     pub fn create_main_window(&mut self) {
         self.create_window("window1");
         self.render_apps();
+        self.listen_for_settings_save();
     }
     fn render_apps(&mut self) {
         let model = gtk::ListStore::new(&[u32::static_type(), String::static_type()]);
@@ -35,6 +37,9 @@ impl<'a> UIBuilder<'a> {
             model.insert_with_values(None, &[0, 1], &[&(index as u32 + 1), &value.name]);
         });
         let tree: gtk::TreeView = self.builder.get_object("app_view").unwrap();
+        tree.set_headers_visible(false);
+        append_column(&tree, 0);
+        append_column(&tree, 1);
         tree.set_model(Some(&model));
         let name_entry: gtk::Entry = self.builder.get_object("name_entry").unwrap();
         let process_selector: gtk::FileChooserButton =
@@ -50,7 +55,7 @@ impl<'a> UIBuilder<'a> {
                     if let (_, Some(ref apps)) = *global.borrow() {
                         let app_option = &apps
                             .apps
-                            .get(model.get_value(&iter, 0).get_some::<u32>().unwrap() as usize);
+                            .get(model.get_value(&iter, 0).get_some::<u32>().unwrap() as usize - 1);
                         if let Some(app) = app_option {
                             name_entry.set_text(&app.name.clone());
                             process_selector.select_uri(&app.executable.clone());
@@ -60,8 +65,60 @@ impl<'a> UIBuilder<'a> {
                 })
             };
         });
+        TREE_STORE.with(|tree_store| {
+            *tree_store.borrow_mut() = Some(model);
+        });
         GLOBAL.with(|global| {
             *global.borrow_mut() = (Some(tree), Some(apps));
+        });
+    }
+    fn listen_for_settings_save(&mut self) {
+        let name_entry: gtk::Entry = self.builder.get_object("name_entry").unwrap();
+        let process_selector: gtk::FileChooserButton =
+            self.builder.get_object("process_selector").unwrap();
+        let save_selector: gtk::FileChooserButton =
+            self.builder.get_object("save_selector").unwrap();
+        let settings_save_button: gtk::Button = self.builder.get_object("save_settings").unwrap();
+        settings_save_button.connect_clicked(move |_| {
+            // TODO: Check if its update or new insert
+            let executable_uri = process_selector.get_uri();
+            let upload_path = save_selector.get_uri();
+            if executable_uri.is_none() || upload_path.is_none() {
+                return;
+            }
+            let mut new_app = crate::apps::App {
+                name: name_entry.get_text().unwrap().to_string(),
+                executable: executable_uri
+                    .unwrap()
+                    .as_str()
+                    .to_string()
+                    .replace("file:///", ""),
+                upload_path: upload_path
+                    .unwrap()
+                    .as_str()
+                    .to_string()
+                    .replace("file:///", ""),
+            };
+            GLOBAL.with(move |global| {
+                if let (_, Some(ref mut apps)) = *global.borrow_mut() {
+                    new_app.save().unwrap();
+                    TREE_STORE.with(|tree_sort| {
+                        if let Some(ref tree) = *tree_sort.borrow() {
+                            let tree_iter = tree.insert(-1);
+                            tree.set(
+                                &tree_iter,
+                                &[0, 1],
+                                &[&(apps.apps.len() as u32 + 1), &new_app.name],
+                            );
+                        }
+                    });
+                    apps.apps.push(new_app);
+                } else {
+                    global.borrow_mut().1 = Some(crate::apps::Apps {
+                        apps: vec![new_app],
+                    });
+                }
+            });
         });
     }
 }
@@ -70,4 +127,13 @@ fn construct_filter(name: &str, pattern: &str) -> gtk::FileFilter {
     filter.add_pattern(pattern);
     filter.set_name(Some(name));
     filter
+}
+fn append_column(tree: &gtk::TreeView, id: i32) {
+    let column = gtk::TreeViewColumn::new();
+    let cell = gtk::CellRendererText::new();
+
+    column.pack_start(&cell, true);
+    // Association of the view's column with the model's `id` column.
+    column.add_attribute(&cell, "text", id);
+    tree.append_column(&column);
 }
