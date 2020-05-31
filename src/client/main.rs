@@ -22,8 +22,8 @@ use sysinfo::{ProcessExt, SystemExt};
 // So many unwraps, this very bad but I'm working on it work 12 hours already and don't have time to make it better
 lazy_static! {
     // SECRET DO NOT LEAK
-    pub static ref DBX_CLIENT_ID : &'static str= "53skk6a0x62f5hw";
-    pub static ref DBX_CLIENT_SECRET: &'static str = "ivx1zzwtf9yxpkf";
+    pub static ref DBX_CLIENT_ID : &'static str= "okemc047qycdrw2";
+    pub static ref DBX_CLIENT_SECRET: &'static str = "utuamgks99hu197";
 }
 
 mod apps;

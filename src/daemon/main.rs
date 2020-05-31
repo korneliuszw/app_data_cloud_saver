@@ -44,8 +44,15 @@ fn main() -> Result<()> {
             Ok(event) => {
                 dbg!(&event);
                 if event.kind == EventKind::Modify(ModifyKind::Any) {
-                    for path in event.paths {}
+                    for path in event.paths {
+                        apps::App::read(path).to_dashmap();
+                    }
                 } else if event.kind == EventKind::Remove(RemoveKind::File) {
+                    for path in event.paths {
+                        apps::find_deleted_app(
+                            path.file_name().unwrap().to_str().unwrap().to_string(),
+                        );
+                    }
                 }
             }
             _ => {}

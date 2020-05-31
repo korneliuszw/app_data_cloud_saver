@@ -2,7 +2,7 @@ use dashmap::DashMap;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 #[derive(Deserialize)]
-struct App {
+pub struct App {
     pub executable: String,
     pub upload_path: PathBuf,
 }

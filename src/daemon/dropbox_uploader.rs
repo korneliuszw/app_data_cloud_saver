@@ -21,10 +21,7 @@ pub fn start_uploader(token: String, rx: Receiver<PathBuf>) {
             }
             let path = first_at_queue.unwrap();
             dbg!(&path);
-            let upload_path = format!(
-                "automatic-save/{}",
-                path.file_name().unwrap().to_str().unwrap()
-            );
+            let upload_path = format!("{}", path.file_name().unwrap().to_str().unwrap());
             upload(
                 &client,
                 &dropbox_sdk::files::CommitInfo::new(upload_path)
