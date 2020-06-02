@@ -16,7 +16,7 @@ impl Apps {
         let mut apps_path = dirs::config_dir().unwrap();
         apps_path.push("SaveManager\\apps");
         if !apps_path.exists() {
-            std::fs::create_dir(apps_path);
+            std::fs::create_dir(apps_path).unwrap();
             return Ok(Apps { apps: Vec::new() });
         }
         let apps: Vec<App> = std::fs::read_dir(apps_path)?
@@ -39,6 +39,5 @@ impl App {
     }
 }
 fn get_filename(name: &String) -> String {
-    let mut file_name = name.replace(" ", "_").to_string();
-    file_name
+    name.replace(" ", "_").to_string()
 }

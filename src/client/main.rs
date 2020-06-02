@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate lazy_static;
-extern crate dashmap;
 extern crate dirs;
 extern crate dropbox_sdk;
 extern crate gio;
@@ -8,23 +5,16 @@ extern crate gtk;
 extern crate serde;
 extern crate serde_json;
 extern crate sysinfo;
-use dashmap::DashMap;
 use gio::prelude::*;
-use gtk::prelude::*;
 use gtk::Application;
 use std::process::Command;
-use std::sync::Mutex;
 use sysinfo::{ProcessExt, SystemExt};
-// It's 5 AM when I'm writing this code, frustrated, with leftovers of my motivation
-// This code is so damm shitty but I don't have strength to make it better :(
-// Maybe I would fix it after hackaton
-// btw I have no clue how to use GTK :D
-// So many unwraps, this very bad but I'm working on it work 12 hours already and don't have time to make it better
-lazy_static! {
-    // SECRET DO NOT LEAK
-    pub static ref DBX_CLIENT_ID : &'static str= "okemc047qycdrw2";
-    pub static ref DBX_CLIENT_SECRET: &'static str = "utuamgks99hu197";
-}
+
+// TODO: Refactor this shitty code
+
+// Get DBX_CLIENT_ID and DBX_CLIENT_SECRET environment variable during compilation
+pub static DBX_CLIENT_ID : &'static str= std::env!("DBX_CLIENT_ID", "Missing DBX_CLIENT_ID ");
+pub static DBX_CLIENT_SECRET: &'static str = std::env!("DBX_CLIENT_SECRET", "Missing DBX_CLIENT_SECRET");
 
 mod apps;
 mod auth;

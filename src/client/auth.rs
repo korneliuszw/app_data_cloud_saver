@@ -1,8 +1,5 @@
-use dropbox_sdk::client_trait::HttpClient;
 use dropbox_sdk::{HyperClient, Oauth2AuthorizeUrlBuilder, Oauth2Type};
 use gtk::prelude::*;
-use std::env;
-use std::sync::mpsc::channel;
 
 pub fn create_auth_window(builder: &crate::ui_builder::UIBuilder) {
     let auth_window = builder.create_window("window2");

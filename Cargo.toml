@@ -22,6 +22,8 @@ dropbox-sdk = "0.3.0"
 serde_json = "1.0.53"
 serde = { version = "1.0.111", features=['derive'] }
 notify = "5.0.0-pre.2"
+log = "0.4.8"
+env_logger = "0.7.1"
 [dependencies.gtk]
 version = "0.8.1"
 features = ["v3_16"]

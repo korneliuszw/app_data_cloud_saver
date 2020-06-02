@@ -1,8 +1,7 @@
 use gio::prelude::*;
 use gtk::prelude::*;
-use gtk::{ApplicationWindow, Builder};
+use gtk::Builder;
 use std::cell::RefCell;
-
 thread_local! {
     static GLOBAL: RefCell<(Option<gtk::TreeView>, Option<crate::apps::Apps>)> = RefCell::new((None, None));
     static TREE_STORE: RefCell<Option<gtk::ListStore>> = RefCell::new(None)
@@ -29,6 +28,7 @@ impl<'a> UIBuilder<'a> {
         self.create_window("window1");
         self.render_apps();
         self.listen_for_settings_save();
+        self.connect_add_delete_buttons();
     }
     fn render_apps(&mut self) {
         let model = gtk::ListStore::new(&[u32::static_type(), String::static_type()]);
@@ -58,8 +58,11 @@ impl<'a> UIBuilder<'a> {
                             .get(model.get_value(&iter, 0).get_some::<u32>().unwrap() as usize - 1);
                         if let Some(app) = app_option {
                             name_entry.set_text(&app.name.clone());
-                            process_selector.select_uri(&app.executable.clone());
-                            save_selector.select_uri(&app.upload_path.clone());
+                            name_entry.set_editable(false);
+                            process_selector
+                                .select_uri(&format!("file:///{}", &app.executable.clone()));
+                            save_selector
+                                .select_uri(&format!("file:///{}", &app.upload_path.clone()));
                         }
                     }
                 })
@@ -72,6 +75,7 @@ impl<'a> UIBuilder<'a> {
             *global.borrow_mut() = (Some(tree), Some(apps));
         });
     }
+    fn connect_add_delete_buttons(&self) {}
     fn listen_for_settings_save(&mut self) {
         let name_entry: gtk::Entry = self.builder.get_object("name_entry").unwrap();
         let process_selector: gtk::FileChooserButton =
@@ -97,11 +101,19 @@ impl<'a> UIBuilder<'a> {
                     .unwrap()
                     .as_str()
                     .to_string()
-                    .replace("file:///", ""),
+                    .replace("file:///", "")
             };
             GLOBAL.with(move |global| {
-                if let (_, Some(ref mut apps)) = *global.borrow_mut() {
+                if let (Some(ref tree), Some(ref mut apps)) = *global.borrow_mut() {
                     new_app.save().unwrap();
+                    if let Some((model, iter)) = tree.get_selection().get_selected() {
+                        if let Some(ref mut app) = apps.apps.get_mut(
+                            model.get_value(&iter, 0).get_some::<u32>().unwrap() as usize - 1,
+                        ) {
+                            **app = new_app;
+                            return;
+                        }
+                    }
                     TREE_STORE.with(|tree_sort| {
                         if let Some(ref tree) = *tree_sort.borrow() {
                             let tree_iter = tree.insert(-1);
