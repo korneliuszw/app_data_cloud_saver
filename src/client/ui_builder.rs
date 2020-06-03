@@ -3,7 +3,7 @@ use gtk::prelude::*;
 use gtk::Builder;
 use std::cell::RefCell;
 thread_local! {
-    static GLOBAL: RefCell<(Option<gtk::TreeView>, Option<crate::apps::Apps>)> = RefCell::new((None, None));
+    static GLOBAL: RefCell<(Option<gtk::TreeView>, Option<Vec<crate::apps::App>>)> = RefCell::new((None, None));
     static TREE_STORE: RefCell<Option<gtk::ListStore>> = RefCell::new(None)
 }
 pub struct UIBuilder<'a> {
@@ -28,12 +28,13 @@ impl<'a> UIBuilder<'a> {
         self.create_window("window1");
         self.render_apps();
         self.listen_for_settings_save();
-        self.connect_add_delete_buttons();
+        self.connect_remove_button();
+        self.connect_add_button();
     }
     fn render_apps(&mut self) {
         let model = gtk::ListStore::new(&[u32::static_type(), String::static_type()]);
-        let apps = crate::apps::Apps::read().unwrap();
-        apps.apps.iter().enumerate().for_each(|(index, value)| {
+        let apps = crate::apps::Apps::read().unwrap().0;
+        apps.iter().enumerate().for_each(|(index, value)| {
             model.insert_with_values(None, &[0, 1], &[&(index as u32 + 1), &value.name]);
         });
         let tree: gtk::TreeView = self.builder.get_object("app_view").unwrap();
@@ -54,7 +55,6 @@ impl<'a> UIBuilder<'a> {
                 GLOBAL.with(|global| {
                     if let (_, Some(ref apps)) = *global.borrow() {
                         let app_option = &apps
-                            .apps
                             .get(model.get_value(&iter, 0).get_some::<u32>().unwrap() as usize - 1);
                         if let Some(app) = app_option {
                             name_entry.set_text(&app.name.clone());
@@ -75,7 +75,43 @@ impl<'a> UIBuilder<'a> {
             *global.borrow_mut() = (Some(tree), Some(apps));
         });
     }
-    fn connect_add_delete_buttons(&self) {}
+    fn connect_add_button(&self) {
+        let add_button : gtk::Button = self.builder.get_object("add_app").unwrap();
+        let name_entry: gtk::Entry = self.builder.get_object("name_entry").unwrap();
+        let process_selector: gtk::FileChooserButton =
+            self.builder.get_object("process_selector").unwrap();
+        let save_selector: gtk::FileChooserButton =
+            self.builder.get_object("save_selector").unwrap();
+        add_button.connect_clicked(move |_| {
+            GLOBAL.with(|global| {
+                if let (Some(ref tree), _) = *global.borrow_mut() {
+                    tree.get_selection().unselect_all();
+                }
+            });
+            name_entry.set_text("");
+            name_entry.set_editable(true);
+            process_selector.set_uri("");
+            save_selector.set_uri("");
+        });
+    }
+    fn connect_remove_button(&self) {
+        let remove_button : gtk::Button = self.builder.get_object("remove_app_button").unwrap();
+        remove_button.connect_clicked(|_| {
+            GLOBAL.with(|global| {
+                if let (Some(ref tree), Some(ref mut apps)) = *global.borrow_mut() {
+                    if let Some((model, iter)) = tree.get_selection().get_selected() {
+                        let index = model.get_value(&iter, 0).get_some::<u32>().unwrap() as usize - 1;
+                        TREE_STORE.with(move |tree_store| {
+                            if let Some(store) = &*tree_store.borrow() {
+                                apps.get(index).unwrap().delete();
+                                store.remove(&iter);
+                            } 
+                        })
+                    } 
+                }
+            });
+        });
+    }
     fn listen_for_settings_save(&mut self) {
         let name_entry: gtk::Entry = self.builder.get_object("name_entry").unwrap();
         let process_selector: gtk::FileChooserButton =
@@ -84,7 +120,6 @@ impl<'a> UIBuilder<'a> {
             self.builder.get_object("save_selector").unwrap();
         let settings_save_button: gtk::Button = self.builder.get_object("save_settings").unwrap();
         settings_save_button.connect_clicked(move |_| {
-            // TODO: Check if its update or new insert
             let executable_uri = process_selector.get_uri();
             let upload_path = save_selector.get_uri();
             if executable_uri.is_none() || upload_path.is_none() {
@@ -107,7 +142,7 @@ impl<'a> UIBuilder<'a> {
                 if let (Some(ref tree), Some(ref mut apps)) = *global.borrow_mut() {
                     new_app.save().unwrap();
                     if let Some((model, iter)) = tree.get_selection().get_selected() {
-                        if let Some(ref mut app) = apps.apps.get_mut(
+                        if let Some(ref mut app) = apps.get_mut(
                             model.get_value(&iter, 0).get_some::<u32>().unwrap() as usize - 1,
                         ) {
                             **app = new_app;
@@ -120,15 +155,13 @@ impl<'a> UIBuilder<'a> {
                             tree.set(
                                 &tree_iter,
                                 &[0, 1],
-                                &[&(apps.apps.len() as u32 + 1), &new_app.name],
+                                &[&(apps.len() as u32 + 1), &new_app.name],
                             );
                         }
                     });
-                    apps.apps.push(new_app);
+                    apps.push(new_app);
                 } else {
-                    global.borrow_mut().1 = Some(crate::apps::Apps {
-                        apps: vec![new_app],
-                    });
+                    global.borrow_mut().1 = Some(vec![new_app]);
                 }
             });
         });
@@ -142,8 +175,10 @@ fn construct_filter(name: &str, pattern: &str) -> gtk::FileFilter {
 }
 fn append_column(tree: &gtk::TreeView, id: i32) {
     let column = gtk::TreeViewColumn::new();
+    if id == 0 {
+        column.set_visible(false);
+    }
     let cell = gtk::CellRendererText::new();
-
     column.pack_start(&cell, true);
     // Association of the view's column with the model's `id` column.
     column.add_attribute(&cell, "text", id);
