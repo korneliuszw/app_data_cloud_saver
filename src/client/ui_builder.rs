@@ -83,6 +83,7 @@ impl<'a> UIBuilder<'a> {
         let save_selector: gtk::FileChooserButton =
             self.builder.get_object("save_selector").unwrap();
         add_button.connect_clicked(move |_| {
+            // Remove selection and set name entry and all file selector to empty
             GLOBAL.with(|global| {
                 if let (Some(ref tree), _) = *global.borrow_mut() {
                     tree.get_selection().unselect_all();
