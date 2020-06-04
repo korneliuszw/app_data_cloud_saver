@@ -29,7 +29,7 @@ optional = true
 
 [features]
 client = ["gio", "gtk"]
-server = ["tokio", "hyper", "dropbox-sdk"]
+server = ["tokio", "hyper", "dropbox-sdk", "lazy_static"]
 daemon = ["sysinfo", "dashmap", "lazy_static", "dropbox-sdk", "notify"]
 client_daemon_shared = ["dirs"]
 [[bin]]
