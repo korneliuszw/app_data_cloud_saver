@@ -11,11 +11,6 @@ use std::process::Command;
 use sysinfo::{ProcessExt, SystemExt};
 
 // TODO: Refactor this shitty code
-
-// Get DBX_CLIENT_ID and DBX_CLIENT_SECRET environment variable during compilation
-pub static DBX_CLIENT_ID : &'static str= std::env!("DBX_CLIENT_ID", "Missing DBX_CLIENT_ID ");
-pub static DBX_CLIENT_SECRET: &'static str = std::env!("DBX_CLIENT_SECRET", "Missing DBX_CLIENT_SECRET");
-
 mod apps;
 mod auth;
 mod ui_builder;
