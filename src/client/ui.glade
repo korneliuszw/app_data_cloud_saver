@@ -258,6 +258,9 @@
   </object>
   <object class="GtkWindow" id="window2">
     <property name="can_focus">False</property>
+    <property name="resizable">False</property>
+    <property name="modal">True</property>
+    <property name="window_position">center</property>
     <child>
       <object class="GtkVBox" id="vbox4">
         <property name="visible">True</property>
@@ -266,7 +269,7 @@
           <object class="GtkLabel" id="label1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">In order to store you save file, we need you to authenticate with dropbox.
+            <property name="label" translatable="yes">In order to store your save file, we need you to authenticate with dropbox.
 Head over to the link below, login and enter received code in the input bar below</property>
           </object>
           <packing>
@@ -276,15 +279,41 @@ Head over to the link below, login and enter received code in the input bar belo
           </packing>
         </child>
         <child>
-          <object class="GtkLinkButton" id="oauth_link">
-            <property name="label" translatable="yes">Proceed to login with Dropbox</property>
+          <object class="GtkVBox" id="vbox1">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="has_tooltip">True</property>
-            <property name="relief">none</property>
-            <property name="yalign">0.5899999737739563</property>
-            <property name="uri">http://glade.gnome.org</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkLabel" id="wrong_code_label">
+                <property name="can_focus">False</property>
+                <property name="no_show_all">True</property>
+                <property name="label" translatable="yes">Invalid code</property>
+                <attributes>
+                  <attribute name="size" value="16"/>
+                  <attribute name="foreground" value="#ffff00000000"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLinkButton" id="oauth_link">
+                <property name="label" translatable="yes">Proceed to login with Dropbox</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="relief">none</property>
+                <property name="yalign">0.5899999737739563</property>
+                <property name="uri">http://glade.gnome.org</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>

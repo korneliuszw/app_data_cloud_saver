@@ -8,17 +8,17 @@ extern crate dropbox_sdk;
 extern crate gio;
 extern crate gtk;
 extern crate notify;
+extern crate pretty_env_logger;
 extern crate serde;
 extern crate serde_json;
 extern crate sysinfo;
-extern crate env_logger;
 use dashmap::DashMap;
 use notify::event::{DataChange, EventKind, ModifyKind, RemoveKind};
 use notify::{RecommendedWatcher, RecursiveMode, Result, Watcher};
+use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use sysinfo::{ProcessExt, SystemExt};
-use std::sync::mpsc::channel;
 mod apps;
 mod dropbox_uploader;
 
@@ -42,15 +42,19 @@ fn main() -> Result<()> {
         std::thread::sleep(Duration::from_secs(15));
     }
     let token = String::from_utf8_lossy(&std::fs::read(token_path).unwrap()).to_string();
+    // Add file watcher to apps folder and do something on some changes
     let mut watcher: RecommendedWatcher =
         Watcher::new_immediate(move |res: Result<notify::Event>| match res {
             Ok(event) => {
                 dbg!(&event);
+                // On file's content modify read it into app and insert into dashmap if not exists
                 if event.kind == EventKind::Modify(ModifyKind::Any) {
                     for path in event.paths {
                         apps::App::read(path).to_dashmap();
                     }
-                } else if event.kind == EventKind::Remove(RemoveKind::File) {
+                }
+                // On file's removal remove it from dashmap
+                else if event.kind == EventKind::Remove(RemoveKind::File) {
                     for path in event.paths {
                         apps::find_deleted_app(
                             path.file_name().unwrap().to_str().unwrap().to_string(),
@@ -80,13 +84,14 @@ fn main() -> Result<()> {
             }
         }
         dbg!(&CURRENTLY_RUNNING);
-        // Compare 
+        // Compare
         let mut previous_lock = PREVIOUS_RUN.lock().unwrap();
         previous_lock
             .iter()
             .filter(|k| !CURRENTLY_RUNNING.contains(k))
             .for_each(|k| {
-                tx.send(PROCESS_UPLOAD_MAP.get(k).unwrap().value().clone()).unwrap();
+                tx.send(PROCESS_UPLOAD_MAP.get(k).unwrap().value().clone())
+                    .unwrap();
             });
         *previous_lock = CURRENTLY_RUNNING;
 
