@@ -18,6 +18,8 @@ hyper = { version = "0.13.6", optional = true}
 log = "0.4.8"
 pretty_env_logger = "0.4.0"
 tokio = { version = "0.2.21", features=["full"], optional=true}
+# Hyper does not contain easy method for running blocking requests, so use reqwest instead
+reqwest = { version = "0.10.6" , features=["blocking"] ,optional=true}
 [dependencies.gtk]
 version = "0.8.1"
 features = ["v3_16"]
@@ -28,18 +30,17 @@ features = ["v2_44"]
 optional = true
 
 [features]
-client = ["gio", "gtk"]
+client = ["gio", "gtk", "hyper", "dirs", "reqwest", "sysinfo"]
 server = ["tokio", "hyper", "dropbox-sdk", "lazy_static"]
-daemon = ["sysinfo", "dashmap", "lazy_static", "dropbox-sdk", "notify"]
-client_daemon_shared = ["dirs"]
+daemon = ["sysinfo", "dashmap", "lazy_static", "dropbox-sdk", "notify", "dirs"]
 [[bin]]
 name = "save_daemon"
 path = "src/daemon/main.rs"
-required-features = ["daemon", "client_daemon_shared"]
+required-features = ["daemon"]
 [[bin]]
 name = "save_client"
 path = "src/client/main.rs"
-required-features = ["client", "client_daemon_shared"]
+required-features = ["client"]
 
 [[bin]]
 name = "auth_server"
