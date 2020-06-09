@@ -7,3 +7,5 @@ Using this app you can your executable and file you wish to save to the dropbox 
 This project was made for hackaton, late at night, therefore code is pretty bad.
 Maybe one day I will make it better.
 Also, in this state it's very unsafe to use, planning to make it safer (i'm unwraping everywhere lol)
+
+**THIS DOES NOT WORK YET (FAILING TO UPLOAD TO DROPBOX), PLEASE WAIT FOR FIRST RELASE**
