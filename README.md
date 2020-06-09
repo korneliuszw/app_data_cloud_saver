@@ -8,4 +8,4 @@ This project was made for hackaton, late at night, therefore code is pretty bad.
 Maybe one day I will make it better.
 Also, in this state it's very unsafe to use, planning to make it safer (i'm unwraping everywhere lol)
 
-**THIS DOES NOT WORK YET (FAILING TO UPLOAD TO DROPBOX), PLEASE WAIT FOR FIRST RELASE**
+**THIS DOES WORK YET, BUT THERE MULTIPLE ISSUES, PLEASE WAIT FOR FIRST RELASE**
